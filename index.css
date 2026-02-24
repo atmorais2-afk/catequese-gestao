@@ -164,6 +164,13 @@ body {
   gap: 1rem;
 }
 
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
 .stat-card {
   text-align: center;
   transition: transform 0.2s;
@@ -790,6 +797,26 @@ input[type="file"] {
 
   .page-header h1 {
     font-size: 1.5rem;
+  }
+
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-group {
+    flex-direction: column;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    max-width: 100% !important;
+    width: 100%;
   }
 
   /* Overlay for sidebar */
