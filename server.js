@@ -16,13 +16,20 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-    let filePath = path.join(BASE_DIR, req.url === '/' ? 'index.html' : req.url);
+    // Split URL to remove query parameters
+    const [urlPathRaw] = req.url.split('?');
+    const urlPath = urlPathRaw === '/' ? 'index.html' : urlPathRaw.startsWith('/') ? urlPathRaw.slice(1) : urlPathRaw;
+
+    let filePath = path.join(BASE_DIR, urlPath);
     const ext = path.extname(filePath);
     const contentType = MIME_TYPES[ext] || 'text/plain';
 
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url} -> ${filePath}`);
+
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            console.error(`❌ Erro ao ler arquivo: ${filePath}`, err.message);
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
             return res.end('404 - Arquivo não encontrado');
         }
         res.writeHead(200, { 'Content-Type': contentType });
