@@ -25,9 +25,15 @@
             <li><a href="#" class="nav-item" data-page="turmas">📚 Turmas</a></li>
         </ul>
     </nav>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button id="mobile-menu-toggle">☰</button>
+            <span class="logo-text">Catequese</span>
+        </div>
 
         <!-- ====== DASHBOARD ====== -->
         <section id="page-dashboard" class="page active">
@@ -76,24 +82,26 @@
                     </div>
                 </div>
                 <div style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Catequisando</th>
-                                <th>Tipo</th>
-                                <th>Turma</th>
-                                <th>Batismo</th>
-                                <th>1ª Comunhão</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body">
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding:2rem; color: var(--text-dim);">
-                                    Carregando dados...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Catequisando</th>
+                                    <th>Tipo</th>
+                                    <th>Turma</th>
+                                    <th>Batismo</th>
+                                    <th>1ª Comunhão</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding:2rem; color: var(--text-dim);">
+                                        Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -386,7 +394,7 @@
                     </form>
                 </div>
                 <!-- List -->
-                <div class="card">
+                <div class="card table-responsive">
                     <h3 style="margin-bottom:1.5rem">Lista de Catequistas</h3>
                     <div id="list-catequistas">
                         <p style="color:var(--text-dim)">Carregando...</p>
@@ -430,7 +438,7 @@
                     </form>
                 </div>
                 <!-- List -->
-                <div class="card">
+                <div class="card table-responsive">
                     <h3 style="margin-bottom:1.5rem">Lista de Turmas</h3>
                     <div id="list-turmas">
                         <p style="color:var(--text-dim)">Carregando...</p>
@@ -459,7 +467,7 @@
                             </select>
                         </div>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div style="overflow-x: auto;" class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>

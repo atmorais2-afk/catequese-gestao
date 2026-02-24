@@ -18,8 +18,23 @@ navItems.forEach(item => {
         pages.forEach(p => p.classList.remove('active'));
         item.classList.add('active');
         document.getElementById(`page-${target}`).classList.add('active');
+
+        // Close sidebar on mobile
+        if (window.innerWidth <= 768) {
+            closeSidebar();
+        }
     });
 });
+
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('sidebar-open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
 
 // ===== TOAST =====
 function showToast(msg, type = 'success') {
@@ -788,6 +803,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('edit-modal').addEventListener('click', (e) => {
         if (e.target.id === 'edit-modal') closeEditModal();
     });
+
+    // Mobile menu
+    document.getElementById('mobile-menu-toggle')?.addEventListener('click', toggleSidebar);
+    document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
 
     await loadDashboardData();
     await loadCatequistas();
