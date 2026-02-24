@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Catequese | Gestão Inteligente</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-icon">✝️</span>
+            <span class="logo-text">Catequese</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a></li>
+            <li><a href="#" class="nav-item" data-page="frequencia">📅 Frequência</a></li>
+            <li><a href="#" class="nav-item" data-page="cadastro-jovem">👦 Cadastro Jovem</a></li>
+            <li><a href="#" class="nav-item" data-page="cadastro-adulto">🧑 Cadastro Adulto</a></li>
+            <li><a href="#" class="nav-item" data-page="catequistas">👤 Catequistas</a></li>
+            <li><a href="#" class="nav-item" data-page="turmas">📚 Turmas</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- ====== DASHBOARD ====== -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Visão geral dos catequisandos</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card stat-card">
+                    <span class="stat-icon">👥</span>
+                    <p>Total Geral</p>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="card stat-card accent">
+                    <span class="stat-icon">👦</span>
+                    <p>Total Jovens</p>
+                    <div class="stat-value" id="stat-jovens">0</div>
+                </div>
+                <div class="card stat-card accent-orange">
+                    <span class="stat-icon">🧑</span>
+                    <p>Total Adultos</p>
+                    <div class="stat-value" id="stat-adultos">0</div>
+                </div>
+                <div class="card stat-card success">
+                    <span class="stat-icon">✅</span>
+                    <p>Com Batismo</p>
+                    <div class="stat-value" id="stat-batismo">0</div>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-icon">🕊️</span>
+                    <p>Com 1ª Comunhão</p>
+                    <div class="stat-value" id="stat-comunhao">0</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="table-header">
+                    <h3>Catequisandos Cadastrados</h3>
+                    <div class="filter-group">
+                        <button class="btn btn-sm" data-filter="all">Todos</button>
+                        <button class="btn btn-sm" data-filter="sem-batismo">Sem Batismo</button>
+                        <button class="btn btn-sm" data-filter="sem-comunhao">Sem Comunhão</button>
+                        <button class="btn btn-sm" data-filter="jovem">Jovens</button>
+                        <button class="btn btn-sm" data-filter="adulto">Adultos</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Catequisando</th>
+                                <th>Tipo</th>
+                                <th>Turma</th>
+                                <th>Batismo</th>
+                                <th>1ª Comunhão</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:2rem; color: var(--text-dim);">
+                                    Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== CADASTRO JOVEM ====== -->
+        <section id="page-cadastro-jovem" class="page">
+            <div class="page-header">
+                <h1>Cadastro Jovem</h1>
+                <p>Crisma — 13 a 17 anos</p>
+            </div>
+            <div class="card">
+                <form id="form-jovem">
+                    <div class="photo-uploader" id="photo-trigger-jovem">
+                        <img id="photo-preview-jovem" src="" alt="Preview">
+                        <div class="photo-placeholder" id="photo-placeholder-jovem">📸<br><small>Adicionar Foto</small>
+                        </div>
+                        <input type="file" id="input-foto-jovem" accept="image/*" style="display:none">
+                    </div>
+
+                    <h3 class="section-title">Dados Pessoais</h3>
+                    <div class="form-grid">
+                        <div class="input-group col-2">
+                            <label>Nome Completo *</label>
+                            <input type="text" id="j-nome" required placeholder="Nome completo do jovem">
+                        </div>
+                        <div class="input-group">
+                            <label>Data de Nascimento *</label>
+                            <input type="date" id="j-nascimento" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Naturalidade</label>
+                            <input type="text" id="j-naturalidade" placeholder="Cidade - Estado">
+                        </div>
+                        <div class="input-group">
+                            <label>Telefone do Jovem</label>
+                            <input type="tel" id="j-telefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="input-group">
+                            <label>Telefone do Responsável *</label>
+                            <input type="tel" id="j-telefone-responsavel" required placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Endereço Completo</label>
+                            <input type="text" id="j-endereco" placeholder="Rua, Nº, Bairro, Cidade">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome da Mãe</label>
+                            <input type="text" id="j-mae" placeholder="Nome completo da mãe">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome do Pai</label>
+                            <input type="text" id="j-pai" placeholder="Nome completo do pai">
+                        </div>
+                        <div class="input-group">
+                            <label>Turma *</label>
+                            <select id="j-turma" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Catequista Responsável</label>
+                            <select id="j-catequista">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Sacramentos</h3>
+                    <div class="form-grid">
+                        <div class="input-group sacrament-group">
+                            <label>Foi Batizado(a)? *</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="j-batismo" value="sim" id="j-batismo-sim"> Sim</label>
+                                <label><input type="radio" name="j-batismo" value="nao" id="j-batismo-nao"> Não</label>
+                            </div>
+                            <div class="doc-upload-area" id="j-batismo-doc" style="display:none">
+                                <p class="doc-info">📎 Anexe a Certidão de Batismo</p>
+                                <input type="file" id="j-doc-batismo" accept=".pdf,image/*">
+                            </div>
+                        </div>
+                        <div class="input-group sacrament-group">
+                            <label>Fez a 1ª Comunhão (Eucaristia)? *</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="j-comunhao" value="sim" id="j-comunhao-sim">
+                                    Sim</label>
+                                <label><input type="radio" name="j-comunhao" value="nao" id="j-comunhao-nao">
+                                    Não</label>
+                            </div>
+                            <div class="doc-upload-area" id="j-comunhao-doc" style="display:none">
+                                <p class="doc-info">📎 Anexe o Certificado de 1ª Comunhão</p>
+                                <input type="file" id="j-doc-comunhao" accept=".pdf,image/*">
+                            </div>
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Possui alguma condição especial? (Se sim, descreva)</label>
+                            <input type="text" id="j-especial" placeholder="Ex: deficiência visual, auditiva...">
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Documentos de Identificação</h3>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Foto do RG ou Certidão de Nascimento</label>
+                            <input type="file" id="j-doc-rg" accept=".pdf,image/*">
+                        </div>
+                        <div class="input-group">
+                            <label>RG do Responsável</label>
+                            <input type="file" id="j-doc-rg-responsavel" accept=".pdf,image/*">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-outline" id="btn-reset-jovem">Limpar</button>
+                        <button type="submit" class="btn btn-primary">✅ Finalizar Cadastro</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ====== CADASTRO ADULTO ====== -->
+        <section id="page-cadastro-adulto" class="page">
+            <div class="page-header">
+                <h1>Cadastro Adulto</h1>
+                <p>Catecumenato — a partir de 18 anos</p>
+            </div>
+            <div class="card">
+                <form id="form-adulto">
+                    <div class="photo-uploader" id="photo-trigger-adulto">
+                        <img id="photo-preview-adulto" src="" alt="Preview">
+                        <div class="photo-placeholder" id="photo-placeholder-adulto">📸<br><small>Adicionar Foto</small>
+                        </div>
+                        <input type="file" id="input-foto-adulto" accept="image/*" style="display:none">
+                    </div>
+
+                    <h3 class="section-title">Dados Pessoais</h3>
+                    <div class="form-grid">
+                        <div class="input-group col-2">
+                            <label>Nome Completo *</label>
+                            <input type="text" id="a-nome" required placeholder="Nome completo do adulto">
+                        </div>
+                        <div class="input-group">
+                            <label>Data de Nascimento *</label>
+                            <input type="date" id="a-nascimento" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Estado Civil</label>
+                            <select id="a-estado-civil">
+                                <option value="">Selecione...</option>
+                                <option>Solteiro(a)</option>
+                                <option>Casado(a)</option>
+                                <option>Divorciado(a)</option>
+                                <option>Viúvo(a)</option>
+                                <option>União Estável</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Naturalidade</label>
+                            <input type="text" id="a-naturalidade" placeholder="Cidade - Estado">
+                        </div>
+
+                        <!-- Spouse area (toggleable) -->
+                        <div id="a-conjuge-area" class="input-group col-2"
+                            style="display:none; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <div class="form-grid">
+                                <div class="input-group col-2" style="margin-bottom: 0.5rem;">
+                                    <label>Nome do Cônjuge</label>
+                                    <input type="text" id="a-nome-conjuge" placeholder="Nome completo do cônjuge">
+                                </div>
+                                <div class="input-group">
+                                    <label>Casado(a) na Igreja?</label>
+                                    <div class="radio-group">
+                                        <label><input type="radio" name="a-casado-igreja" value="sim"> Sim</label>
+                                        <label><input type="radio" name="a-casado-igreja" value="nao" checked>
+                                            Não</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Telefone / WhatsApp</label>
+                            <input type="tel" id="a-telefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Endereço Completo</label>
+                            <input type="text" id="a-endereco" placeholder="Rua, Nº, Bairro, Cidade">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome da Mãe</label>
+                            <input type="text" id="a-mae" placeholder="Nome completo da mãe">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome do Pai</label>
+                            <input type="text" id="a-pai" placeholder="Nome completo do pai">
+                        </div>
+                        <div class="input-group">
+                            <label>Turma *</label>
+                            <select id="a-turma" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Catequista Responsável</label>
+                            <select id="a-catequista">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Sacramentos</h3>
+                    <div class="form-grid">
+                        <div class="input-group sacrament-group">
+                            <label>Foi Batizado(a)? *</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="a-batismo" value="sim" id="a-batismo-sim"> Sim</label>
+                                <label><input type="radio" name="a-batismo" value="nao" id="a-batismo-nao"> Não</label>
+                            </div>
+                            <div class="doc-upload-area" id="a-batismo-doc" style="display:none">
+                                <p class="doc-info">📎 Anexe a Certidão de Batismo</p>
+                                <input type="file" id="a-doc-batismo" accept=".pdf,image/*">
+                            </div>
+                        </div>
+                        <div class="input-group sacrament-group">
+                            <label>Fez a 1ª Comunhão (Eucaristia)? *</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="a-comunhao" value="sim" id="a-comunhao-sim">
+                                    Sim</label>
+                                <label><input type="radio" name="a-comunhao" value="nao" id="a-comunhao-nao">
+                                    Não</label>
+                            </div>
+                            <div class="doc-upload-area" id="a-comunhao-doc" style="display:none">
+                                <p class="doc-info">📎 Anexe o Certificado de 1ª Comunhão</p>
+                                <input type="file" id="a-doc-comunhao" accept=".pdf,image/*">
+                            </div>
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Possui alguma condição especial? (Se sim, descreva)</label>
+                            <input type="text" id="a-especial" placeholder="Ex: deficiência visual, auditiva...">
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Documentos de Identificação</h3>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Foto do RG ou CNH</label>
+                            <input type="file" id="a-doc-rg" accept=".pdf,image/*">
+                        </div>
+                        <div class="input-group">
+                            <label>Certidão de Nascimento / Casamento</label>
+                            <input type="file" id="a-doc-certidao" accept=".pdf,image/*">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-outline">Limpar</button>
+                        <button type="submit" class="btn btn-primary">✅ Finalizar Cadastro</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ====== CATEQUISTAS ====== -->
+        <section id="page-catequistas" class="page">
+            <div class="page-header">
+                <h1>Catequistas</h1>
+                <p>Gerencie os catequistas responsáveis</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; align-items: start;">
+                <!-- Form -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.5rem">Novo Catequista</h3>
+                    <form id="form-catequista">
+                        <input type="hidden" id="catequista-edit-id">
+                        <div class="input-group" style="margin-bottom:1rem">
+                            <label>Nome Completo *</label>
+                            <input type="text" id="c-nome" required placeholder="Nome do catequista">
+                        </div>
+                        <div class="input-group" style="margin-bottom:1rem">
+                            <label>E-mail</label>
+                            <input type="email" id="c-email" placeholder="email@exemplo.com">
+                        </div>
+                        <div class="input-group" style="margin-bottom:1.5rem">
+                            <label>Telefone</label>
+                            <input type="tel" id="c-telefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="btn-cancel-catequista"
+                                style="display:none">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="btn-save-catequista">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- List -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.5rem">Lista de Catequistas</h3>
+                    <div id="list-catequistas">
+                        <p style="color:var(--text-dim)">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== TURMAS ====== -->
+        <section id="page-turmas" class="page">
+            <div class="page-header">
+                <h1>Turmas</h1>
+                <p>Gerencie as turmas da catequese</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; align-items: start;">
+                <!-- Form -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.5rem">Nova Turma</h3>
+                    <form id="form-turma">
+                        <input type="hidden" id="turma-edit-id">
+                        <div class="input-group" style="margin-bottom:1rem">
+                            <label>Nome da Turma *</label>
+                            <input type="text" id="t-nome" required placeholder="Ex: Crisma Jovem 2025">
+                        </div>
+                        <div class="input-group" style="margin-bottom:1rem">
+                            <label>Tipo</label>
+                            <select id="t-tipo">
+                                <option value="Crisma Jovem">Crisma Jovem</option>
+                                <option value="Catecumenato">Catecumenato</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom:1.5rem">
+                            <label>Ano</label>
+                            <input type="number" id="t-ano" value="2025" min="2024" max="2030">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="btn-cancel-turma"
+                                style="display:none">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="btn-save-turma">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- List -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.5rem">Lista de Turmas</h3>
+                    <div id="list-turmas">
+                        <p style="color:var(--text-dim)">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== FREQUÊNCIA ====== -->
+        <section id="page-frequencia" class="page">
+            <div class="page-header">
+                <h1>Registro de Presença</h1>
+                <p>Controle de frequência e observações</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start;">
+                <!-- Summary List -->
+                <div class="card">
+                    <div class="table-header">
+                        <h3>Resumo de Frequência</h3>
+                        <div class="filter-group">
+                            <input type="text" id="f-search" placeholder="Buscar por nome..." style="max-width: 200px;">
+                            <select id="f-sort" style="max-width: 150px;">
+                                <option value="desc">Maior Frequência</option>
+                                <option value="asc">Menor Frequência</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Presenças</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-frequencia-body">
+                                <tr>
+                                    <td colspan="4" style="text-align:center; padding:1rem; color:var(--text-dim);">
+                                        Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- end .main-content -->
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-title" style="margin-bottom: 0.2rem;">Editar Catequisando</h2>
+                    <div id="edit-presence-count" class="badge badge-blue">Presence Count: 0</div>
+                </div>
+                <button class="modal-close" id="btn-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit">
+                    <input type="hidden" id="edit-id">
+                    <input type="hidden" id="edit-tipo">
+
+                    <h3 class="section-title">Foto</h3>
+                    <div class="photo-uploader" id="photo-trigger-edit"
+                        style="margin:0 0 1rem 0; border-radius:0.5rem; width:100%; height:90px; flex-direction:row; gap:1rem; justify-content:flex-start; padding:0 1rem;">
+                        <img id="photo-preview-edit" src="" alt="Foto"
+                            style="width:64px; height:64px; border-radius:50%; object-fit:cover; display:none;">
+                        <div id="photo-placeholder-edit" style="font-size:1.2rem; color:var(--text-dim)">📸
+                            <small>Clique para alterar foto</small>
+                        </div>
+                        <input type="file" id="input-foto-edit" accept="image/*" style="display:none">
+                    </div>
+
+                    <h3 class="section-title">Dados Pessoais</h3>
+                    <div class="form-grid">
+                        <div class="input-group col-2">
+                            <label>Nome Completo *</label>
+                            <input type="text" id="edit-nome" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Data de Nascimento</label>
+                            <input type="date" id="edit-nascimento">
+                        </div>
+                        <div class="input-group">
+                            <label>Telefone</label>
+                            <input type="tel" id="edit-telefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Endereço</label>
+                            <input type="text" id="edit-endereco">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome da Mãe</label>
+                            <input type="text" id="edit-mae">
+                        </div>
+                        <div class="input-group">
+                            <label>Nome do Pai</label>
+                            <input type="text" id="edit-pai">
+                        </div>
+                        <!-- Adulto-only fields -->
+                        <div class="input-group" id="edit-row-estado-civil">
+                            <label>Estado Civil</label>
+                            <select id="edit-estado-civil">
+                                <option value="">Selecione...</option>
+                                <option>Solteiro(a)</option>
+                                <option>Casado(a)</option>
+                                <option>Divorciado(a)</option>
+                                <option>Viúvo(a)</option>
+                                <option>União Estável</option>
+                            </select>
+                        </div>
+                        <div class="input-group" id="edit-row-naturalidade">
+                            <label>Naturalidade</label>
+                            <input type="text" id="edit-naturalidade" placeholder="Cidade - Estado">
+                        </div>
+                        <div class="input-group col-2">
+                            <label>Condição Especial</label>
+                            <input type="text" id="edit-especial" placeholder="Ex: deficiência visual, auditiva...">
+                        </div>
+                        <div class="input-group">
+                            <label>Turma</label>
+                            <select id="edit-turma">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Catequista</label>
+                            <select id="edit-catequista">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Sacramentos</h3>
+                    <div style="display:flex; gap:2rem; padding:0.5rem 0 1rem;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.95rem;">
+                            <input type="checkbox" id="edit-batismo"
+                                style="accent-color:var(--primary); width:18px; height:18px;">
+                            Batizado(a)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.95rem;">
+                            <input type="checkbox" id="edit-comunhao"
+                                style="accent-color:var(--primary); width:18px; height:18px;">
+                            1ª Comunhão
+                        </label>
+                    </div>
+
+                    <h3 class="section-title">Status</h3>
+                    <div class="form-grid">
+                        <div class="input-group col-2">
+                            <label>Status do Cadastro</label>
+                            <select id="edit-status">
+                                <option value="completo">Completo</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="incompleto">Incompleto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Documentos Cadastrados</h3>
+                    <div id="edit-doc-list" style="margin-bottom: 1rem;">
+                        <p style="color:var(--text-dim); font-size:0.85rem">Carregando documentos...</p>
+                    </div>
+                    <div class="input-group">
+                        <label>Adicionar Novo Documento</label>
+                        <div style="display:flex; gap:0.5rem">
+                            <select id="edit-new-doc-tipo" style="flex:1">
+                                <option value="Outro">Outro</option>
+                                <option value="Certidão de Batismo">Certidão de Batismo</option>
+                                <option value="Certidão de 1ª Comunhão">Certidão de 1ª Comunhão</option>
+                                <option value="RG/CPF">RG/CPF</option>
+                                <option value="Comprovante de Residência">Comprovante de Residência</option>
+                            </select>
+                            <input type="file" id="edit-new-doc-file" style="flex:1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btn-edit-delete">🗑️ Excluir</button>
+                <div style="display:flex;gap:0.75rem">
+                    <button class="btn btn-outline" id="btn-edit-cancel">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-edit-save">💾 Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Modal -->
+    <div id="attendance-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box" style="width: min(450px, 95vw);">
+            <div class="modal-header">
+                <div>
+                    <h2 style="margin-bottom: 0.2rem;">Registrar Presença</h2>
+                    <p id="att-student-name" style="color: var(--text-dim); font-size: 0.9rem;">Nome do Catequisando</p>
+                </div>
+                <button class="modal-close" id="btn-att-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-attendance-modal">
+                    <input type="hidden" id="att-student-id">
+                    <div class="input-group" style="margin-bottom:1rem">
+                        <label>Data *</label>
+                        <input type="date" id="att-data" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Observação</label>
+                        <textarea id="att-observacao" rows="3" placeholder="Opcional..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-att-cancel">Cancelar</button>
+                <button class="btn btn-primary" id="btn-att-save">✅ Confirmar Presença</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box" style="width: min(600px, 95vw);">
+            <div class="modal-header">
+                <div>
+                    <h2 style="margin-bottom: 0.2rem;">Histórico de Presenças</h2>
+                    <p id="hist-student-name" style="color: var(--text-dim); font-size: 0.9rem;">Nome do Catequisando
+                    </p>
+                </div>
+                <button class="modal-close" id="btn-hist-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-history-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-hist-close-footer">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="main.js" defer></script>
+</body>
+
+</html>
