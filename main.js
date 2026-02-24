@@ -115,7 +115,6 @@ async function submitJovem(e) {
         const { data: catequisando, error } = await db.from('catequisandos').insert([{
             nome_completo: document.getElementById('j-nome').value,
             data_nascimento: document.getElementById('j-nascimento').value,
-            estado_civil: document.getElementById('j-estado-civil').value,
             naturalidade: document.getElementById('j-naturalidade').value,
             telefone: document.getElementById('j-telefone').value,
             endereco: document.getElementById('j-endereco').value,
