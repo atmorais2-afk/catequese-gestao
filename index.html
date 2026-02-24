@@ -18,9 +18,10 @@
         </div>
         <ul class="nav-links">
             <li><a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a></li>
-            <li><a href="#" class="nav-item" data-page="frequencia">📅 Frequência</a></li>
-            <li><a href="#" class="nav-item" data-page="cadastro-jovem">👦 Cadastro Jovem</a></li>
-            <li><a href="#" class="nav-item" data-page="cadastro-adulto">🧑 Cadastro Adulto</a></li>
+            <li class="desktop-only"><a href="#" class="nav-item" data-page="frequencia">📅 Frequência</a></li>
+            <li class="desktop-only"><a href="#" class="nav-item" data-page="cadastro-jovem">👦 Cadastro Jovem</a></li>
+            <li class="desktop-only"><a href="#" class="nav-item" data-page="cadastro-adulto">🧑 Cadastro Adulto</a>
+            </li>
             <li><a href="#" class="nav-item" data-page="catequistas">👤 Catequistas</a></li>
             <li><a href="#" class="nav-item" data-page="turmas">📚 Turmas</a></li>
         </ul>
@@ -31,8 +32,13 @@
     <div class="main-content">
         <!-- Mobile Header -->
         <div class="mobile-header">
-            <button id="mobile-menu-toggle">☰</button>
-            <span class="logo-text">Catequese</span>
+            <button id="mobile-menu-toggle" title="Menu Geral">☰</button>
+            <div class="mobile-quick-nav">
+                <button class="nav-item quick-btn" data-page="frequencia" title="Frequência">📅</button>
+                <button class="nav-item quick-btn" data-page="cadastro-jovem" title="Jovem">👦</button>
+                <button class="nav-item quick-btn" data-page="cadastro-adulto" title="Adulto">🧑</button>
+            </div>
+            <span class="logo-text desktop-only">Catequese</span>
         </div>
 
         <!-- ====== DASHBOARD ====== -->

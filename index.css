@@ -719,6 +719,37 @@ input[type="file"] {
   z-index: 101;
 }
 
+.mobile-quick-nav {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.quick-btn {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-btn:hover {
+  background: var(--surface-hover);
+}
+
+.quick-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: transparent;
+}
+
+.desktop-only {
+  display: block;
+}
+
 #mobile-menu-toggle {
   background: none;
   border: 1px solid var(--border);
@@ -834,5 +865,9 @@ input[type="file"] {
 
   .sidebar-overlay.active {
     display: block;
+  }
+
+  .desktop-only {
+    display: none !important;
   }
 }
