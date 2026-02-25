@@ -1,5 +1,5 @@
 import { db, uploadFile, loadSelectOptions } from './api.js';
-import { showToast } from './ui.js';
+import { showToast, escapeHtml } from './ui.js';
 import { loadDashboardData } from './dashboard.js';
 
 let currentEditData = null;
@@ -86,25 +86,34 @@ async function loadEditDocuments(catequisandoId) {
     if (error) { listEl.innerHTML = `<p style="color:var(--accent)">Erro ao carregar documentos.</p>`; return; }
     if (!docs || docs.length === 0) { listEl.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem">Nenhum documento anexado.</p>`; return; }
 
+    // Sem onclick inline: usa data-doc-id + data-path (event delegation via setupDocListActions)
     listEl.innerHTML = docs.map(d => `
         <div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass); padding:0.5rem; border-radius:0.4rem; margin-bottom:0.4rem; border:1px solid var(--border)">
-            <a href="${db.storage.from('catequese_documentos').getPublicUrl(d.arquivo_path).data.publicUrl}" target="_blank" style="color:var(--primary); font-size:0.85rem; text-decoration:none;">📄 ${d.tipo_documento}</a>
-            <button type="button" class="btn btn-sm btn-danger" style="padding:0.2rem 0.4rem" onclick="window.deleteDocument('${d.id}', '${d.arquivo_path}', '${catequisandoId}')">🗑️</button>
+            <a href="${db.storage.from('catequese_documentos').getPublicUrl(d.arquivo_path).data.publicUrl}" target="_blank" style="color:var(--primary); font-size:0.85rem; text-decoration:none;">📄 ${escapeHtml(d.tipo_documento)}</a>
+            <button type="button" class="btn btn-sm btn-danger" style="padding:0.2rem 0.4rem"
+                data-action="delete-doc" data-doc-id="${d.id}" data-path="${escapeHtml(d.arquivo_path)}">🗑️</button>
         </div>
     `).join('');
 }
 
-window.deleteDocument = async (docId, filePath, catequisandoId) => {
-    if (!confirm('Deseja excluir este documento?')) return;
-    try {
-        await db.storage.from('catequese_documentos').remove([filePath]);
-        await db.from('documentos').delete().eq('id', docId);
-        showToast('Documento removido.');
-        await loadEditDocuments(catequisandoId);
-    } catch (err) {
-        showToast('Erro ao remover arquivo.', 'error');
-    }
-};
+// Event delegation para excluir documentos no modal de edição (chamar uma vez em app.js)
+export function setupDocListActions() {
+    document.getElementById('edit-doc-list')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action="delete-doc"]');
+        if (!btn) return;
+        if (!confirm('Deseja excluir este documento?')) return;
+        const { docId, path } = btn.dataset;
+        const catequisandoId = document.getElementById('edit-id').value;
+        try {
+            await db.storage.from('catequese_documentos').remove([path]);
+            await db.from('documentos').delete().eq('id', docId);
+            showToast('Documento removido.');
+            await loadEditDocuments(catequisandoId);
+        } catch (err) {
+            showToast('Erro ao remover arquivo.', 'error');
+        }
+    });
+}
 
 export function closeEditModal() {
     document.getElementById('edit-modal').style.display = 'none';
@@ -157,12 +166,11 @@ export async function saveEditModal() {
         const newDocFile = document.getElementById('edit-new-doc-file').files[0];
         if (newDocFile) {
             const tipo = document.getElementById('edit-new-doc-tipo').value;
-            const path = await uploadFile('catequese_documentos', newDocFile, `${tipo.replace(/\s+/g, '_').toLowerCase()}_`);
-            const fileName = path.split('/').pop();
+            const docPath = await uploadFile('catequese_documentos', newDocFile, `${tipo.replace(/\s+/g, '_').toLowerCase()}_`);
             await db.from('documentos').insert([{
                 catequisando_id: id,
                 tipo_documento: tipo,
-                arquivo_path: fileName
+                arquivo_path: docPath  // path completo, não só o nome do arquivo
             }]);
             document.getElementById('edit-new-doc-file').value = '';
         }

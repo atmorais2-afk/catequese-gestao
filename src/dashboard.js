@@ -1,5 +1,6 @@
 import { db } from './api.js';
 import { state } from './state.js';
+import { escapeHtml } from './ui.js';
 
 let currentAlunos = [];
 let currentPage = 1;
@@ -41,8 +42,8 @@ export async function loadDashboardData() {
     document.getElementById('stat-total').textContent = currentAlunos.length;
     document.getElementById('stat-jovens').textContent = currentAlunos.filter(a => a.tipo === 'jovem').length;
     document.getElementById('stat-adultos').textContent = currentAlunos.filter(a => a.tipo === 'adulto').length;
-    document.getElementById('stat-batismo').textContent = currentAlunos.filter(a => a.sacramentos?.[0]?.tem_batismo).length;
-    document.getElementById('stat-comunhao').textContent = currentAlunos.filter(a => a.sacramentos?.[0]?.tem_primeira_comunhao).length;
+    document.getElementById('stat-batismo').textContent = currentAlunos.filter(a => a.sacramentos?.tem_batismo).length;
+    document.getElementById('stat-comunhao').textContent = currentAlunos.filter(a => a.sacramentos?.tem_primeira_comunhao).length;
 
     applyFiltersAndRender();
 }
@@ -57,8 +58,8 @@ function applyFiltersAndRender() {
     }
 
     // Type filter
-    if (currentFilter === 'sem-batismo') filtered = filtered.filter(a => !a.sacramentos?.[0]?.tem_batismo);
-    else if (currentFilter === 'sem-comunhao') filtered = filtered.filter(a => !a.sacramentos?.[0]?.tem_primeira_comunhao);
+    if (currentFilter === 'sem-batismo') filtered = filtered.filter(a => !a.sacramentos?.tem_batismo);
+    else if (currentFilter === 'sem-comunhao') filtered = filtered.filter(a => !a.sacramentos?.tem_primeira_comunhao);
     else if (currentFilter === 'jovem') filtered = filtered.filter(a => a.tipo === 'jovem');
     else if (currentFilter === 'adulto') filtered = filtered.filter(a => a.tipo === 'adulto');
 
@@ -89,21 +90,28 @@ function renderTable(alunos) {
         <tr>
             <td>
                 <div class="student-cell">
-                    <img class="student-avatar" src="${a.foto_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(a.nome_completo) + '&background=6366f1&color=fff&size=36'}" alt="${a.nome_completo}">
-                    ${a.nome_completo}
+                    <img class="student-avatar" src="${a.foto_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(a.nome_completo) + '&background=6366f1&color=fff&size=36'}" alt="${escapeHtml(a.nome_completo)}">
+                    ${escapeHtml(a.nome_completo)}
                 </div>
             </td>
             <td><span class="badge ${a.tipo === 'jovem' ? 'badge-blue' : 'badge-yellow'}">${a.tipo === 'jovem' ? 'Jovem' : 'Adulto'}</span></td>
-            <td>${a.turmas?.nome || '—'}</td>
-            <td>${a.sacramentos?.[0]?.tem_batismo ? '<span class="badge badge-green">✅ Sim</span>' : '<span class="badge badge-red">❌ Não</span>'}</td>
-            <td>${a.sacramentos?.[0]?.tem_primeira_comunhao ? '<span class="badge badge-green">✅ Sim</span>' : '<span class="badge badge-red">❌ Não</span>'}</td>
-            <td><span class="badge ${a.status_cadastro === 'completo' ? 'badge-green' : 'badge-yellow'}">${a.status_cadastro}</span></td>
-            <td><button class="btn-edit-row" onclick="window.openEditModal('${a.id}')">✏️ Editar</button></td>
+            <td>${escapeHtml(a.turmas?.nome || '—')}</td>
+            <td>${a.sacramentos?.tem_batismo ? '<span class="badge badge-green">✅ Sim</span>' : '<span class="badge badge-red">❌ Não</span>'}</td>
+            <td>${a.sacramentos?.tem_primeira_comunhao ? '<span class="badge badge-green">✅ Sim</span>' : '<span class="badge badge-red">❌ Não</span>'}</td>
+            <td><span class="badge ${a.status_cadastro === 'completo' ? 'badge-green' : 'badge-yellow'}">${escapeHtml(a.status_cadastro)}</span></td>
+            <td><button class="btn-edit-row" data-action="edit" data-id="${a.id}">✏️ Editar</button></td>
         </tr>
     `).join('');
 }
 
 export function setupFilters() {
+    // Event delegation para botão Editar da tabela (substitui onclick inline)
+    document.getElementById('table-body')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="edit"]');
+        if (!btn) return;
+        window.openEditModal(btn.dataset.id);
+    });
+
     document.querySelectorAll('[data-filter]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             currentFilter = e.target.getAttribute('data-filter');

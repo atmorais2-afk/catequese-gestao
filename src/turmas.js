@@ -1,5 +1,7 @@
 import { db, loadSelectOptions } from './api.js';
-import { showToast } from './ui.js';
+import { showToast, escapeHtml } from './ui.js';
+
+let turmasData = [];
 
 export async function loadTurmas() {
     const container = document.getElementById('list-turmas');
@@ -15,17 +17,18 @@ export async function loadTurmas() {
     }
 
     const { data } = await db.from('turmas').select('*').order('nome');
-    if (!data || !data.length) { container.innerHTML = `<p style="color:var(--text-dim)">Nenhuma turma cadastrada ainda.</p>`; return; }
+    turmasData = data || [];
+    if (!turmasData.length) { container.innerHTML = `<p style="color:var(--text-dim)">Nenhuma turma cadastrada ainda.</p>`; return; }
 
-    container.innerHTML = data.map(t => `
+    container.innerHTML = turmasData.map(t => `
         <div class="list-item">
             <div class="list-item-info">
-                <p>📚 ${t.nome}</p>
-                <small>${t.tipo || ''} • ${t.ano || ''}</small>
+                <p>📚 ${escapeHtml(t.nome)}</p>
+                <small>${escapeHtml(t.tipo || '')} • ${escapeHtml(String(t.ano || ''))}</small>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm" onclick="window.editTurma('${t.id}','${t.nome}','${t.tipo || ''}','${t.ano || ''}')">✏️</button>
-                <button class="btn btn-danger btn-sm" onclick="window.deleteTurma('${t.id}')">🗑️</button>
+                <button class="btn btn-sm" data-action="edit" data-id="${t.id}">✏️</button>
+                <button class="btn btn-danger btn-sm" data-action="delete" data-id="${t.id}">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -70,21 +73,31 @@ export function setupTurmaCRUD() {
         if (btnSave) btnSave.textContent = 'Salvar';
     });
 
-    window.editTurma = (id, nome, tipo, ano) => {
-        document.getElementById('turma-edit-id').value = id;
-        document.getElementById('t-nome').value = nome;
-        document.getElementById('t-tipo').value = tipo;
-        document.getElementById('t-ano').value = ano;
-        const btnCancel = document.getElementById('btn-cancel-turma');
-        const btnSave = document.getElementById('btn-save-turma');
-        if (btnCancel) btnCancel.style.display = 'inline-flex';
-        if (btnSave) btnSave.textContent = 'Atualizar';
-    };
+    // Event delegation: sem onclick inline, sem window.*
+    document.getElementById('list-turmas')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const { action, id } = btn.dataset;
 
-    window.deleteTurma = async (id) => {
-        if (!confirm('Deseja excluir esta turma?')) return;
-        await db.from('turmas').delete().eq('id', id);
-        showToast('Turma removida.');
-        await loadTurmas();
-    };
+        if (action === 'edit') {
+            const t = turmasData.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('turma-edit-id').value = t.id;
+            document.getElementById('t-nome').value = t.nome;
+            document.getElementById('t-tipo').value = t.tipo || '';
+            document.getElementById('t-ano').value = t.ano || '';
+            const btnCancel = document.getElementById('btn-cancel-turma');
+            const btnSave = document.getElementById('btn-save-turma');
+            if (btnCancel) btnCancel.style.display = 'inline-flex';
+            if (btnSave) btnSave.textContent = 'Atualizar';
+        }
+
+        if (action === 'delete') {
+            if (!confirm('Deseja excluir esta turma?')) return;
+            const { error } = await db.from('turmas').delete().eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('Turma removida.');
+            await loadTurmas();
+        }
+    });
 }

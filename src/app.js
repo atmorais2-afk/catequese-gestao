@@ -2,10 +2,10 @@ import { setupFilters } from './dashboard.js';
 import { setupCatequistaCRUD, loadCatequistas } from './catequistas.js';
 import { setupTurmaCRUD, loadTurmas } from './turmas.js';
 import { loadDashboardData } from './dashboard.js';
-import { loadPresencaResumo, submitPresenca, closeAttendanceModal, closeHistoryModal, exportFrequenciaExcel } from './frequencia.js';
+import { loadPresencaResumo, submitPresenca, closeAttendanceModal, closeHistoryModal, exportFrequenciaExcel, setupFrequenciaActions } from './frequencia.js';
 import { setupPhotoUploader, setupConditionalDocUpload, submitJovem, submitAdulto } from './cadastro.js';
 import { setupAuth } from './auth.js';
-import { closeEditModal, saveEditModal, deleteEditModal, printFicha } from './edit.js';
+import { closeEditModal, saveEditModal, deleteEditModal, printFicha, setupDocListActions } from './edit.js';
 import { setupNavigation as setupUINav, closeSidebar } from './ui.js';
 import { initAppData } from './init.js';
 
@@ -16,6 +16,8 @@ async function ignite() {
     setupFilters();
     setupCatequistaCRUD();
     setupTurmaCRUD();
+    setupFrequenciaActions();
+    setupDocListActions();
     setupAuth();
 
     console.log('[App] Modules setup called.');

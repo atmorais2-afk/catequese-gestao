@@ -1,5 +1,7 @@
 import { db, loadSelectOptions } from './api.js';
-import { showToast } from './ui.js';
+import { showToast, escapeHtml } from './ui.js';
+
+let catequistasData = [];
 
 export async function loadCatequistas() {
     const container = document.getElementById('list-catequistas');
@@ -15,17 +17,18 @@ export async function loadCatequistas() {
     }
 
     const { data } = await db.from('catequistas').select('*').order('nome');
-    if (!data || !data.length) { container.innerHTML = `<p style="color:var(--text-dim)">Nenhum catequista cadastrado ainda.</p>`; return; }
+    catequistasData = data || [];
+    if (!catequistasData.length) { container.innerHTML = `<p style="color:var(--text-dim)">Nenhum catequista cadastrado ainda.</p>`; return; }
 
-    container.innerHTML = data.map(c => `
+    container.innerHTML = catequistasData.map(c => `
         <div class="list-item">
             <div class="list-item-info">
-                <p>👤 ${c.nome}</p>
-                <small>${c.email || ''} ${c.telefone ? '• ' + c.telefone : ''}</small>
+                <p>👤 ${escapeHtml(c.nome)}</p>
+                <small>${escapeHtml(c.email || '')} ${c.telefone ? '• ' + escapeHtml(c.telefone) : ''}</small>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm" onclick="window.editCatequista('${c.id}','${c.nome}','${c.email || ''}','${c.telefone || ''}')">✏️</button>
-                <button class="btn btn-danger btn-sm" onclick="window.deleteCatequista('${c.id}')">🗑️</button>
+                <button class="btn btn-sm" data-action="edit" data-id="${c.id}">✏️</button>
+                <button class="btn btn-danger btn-sm" data-action="delete" data-id="${c.id}">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -70,21 +73,31 @@ export function setupCatequistaCRUD() {
         if (btnSave) btnSave.textContent = 'Salvar';
     });
 
-    window.editCatequista = (id, nome, email, telefone) => {
-        document.getElementById('catequista-edit-id').value = id;
-        document.getElementById('c-nome').value = nome;
-        document.getElementById('c-email').value = email;
-        document.getElementById('c-telefone').value = telefone;
-        const btnCancel = document.getElementById('btn-cancel-catequista');
-        const btnSave = document.getElementById('btn-save-catequista');
-        if (btnCancel) btnCancel.style.display = 'inline-flex';
-        if (btnSave) btnSave.textContent = 'Atualizar';
-    };
+    // Event delegation: sem onclick inline, sem window.*
+    document.getElementById('list-catequistas')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const { action, id } = btn.dataset;
 
-    window.deleteCatequista = async (id) => {
-        if (!confirm('Deseja excluir este catequista?')) return;
-        await db.from('catequistas').delete().eq('id', id);
-        showToast('Catequista removido.');
-        await loadCatequistas();
-    };
+        if (action === 'edit') {
+            const c = catequistasData.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('catequista-edit-id').value = c.id;
+            document.getElementById('c-nome').value = c.nome;
+            document.getElementById('c-email').value = c.email || '';
+            document.getElementById('c-telefone').value = c.telefone || '';
+            const btnCancel = document.getElementById('btn-cancel-catequista');
+            const btnSave = document.getElementById('btn-save-catequista');
+            if (btnCancel) btnCancel.style.display = 'inline-flex';
+            if (btnSave) btnSave.textContent = 'Atualizar';
+        }
+
+        if (action === 'delete') {
+            if (!confirm('Deseja excluir este catequista?')) return;
+            const { error } = await db.from('catequistas').delete().eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('Catequista removido.');
+            await loadCatequistas();
+        }
+    });
 }

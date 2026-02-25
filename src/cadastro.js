@@ -39,40 +39,50 @@ export function setupPhotoUploader(triggerId, inputId, previewId, placeholderId)
     });
 }
 
-// ===== FORM: JOVEM =====
-export async function submitJovem(e) {
+// ===== FUNÇÃO UNIFICADA (jovem e adulto compartilham ~80% da lógica) =====
+async function submitCatequisando(tipo, e) {
     e.preventDefault();
+    const p = tipo === 'jovem' ? 'j' : 'a';
     const btn = e.target.querySelector('[type="submit"]');
     btn.disabled = true; btn.textContent = 'Salvando...';
 
     try {
         let fotoUrl = null;
-        const fotoFile = document.getElementById('input-foto-jovem').files[0];
-        if (fotoFile) fotoUrl = await uploadFile('catequese_fotos', fotoFile, 'jovem_');
+        const fotoFile = document.getElementById(`input-foto-${tipo}`).files[0];
+        if (fotoFile) fotoUrl = await uploadFile('catequese_fotos', fotoFile, `${tipo}_`);
 
-        const temBatismo = document.querySelector('input[name="j-batismo"]:checked')?.value === 'sim';
-        const temComunhao = document.querySelector('input[name="j-comunhao"]:checked')?.value === 'sim';
+        const temBatismo = document.querySelector(`input[name="${p}-batismo"]:checked`)?.value === 'sim';
+        const temComunhao = document.querySelector(`input[name="${p}-comunhao"]:checked`)?.value === 'sim';
 
-        const turmaId = document.getElementById('j-turma').value || null;
-        const catequistaId = document.getElementById('j-catequista').value || null;
-
-        const { data: catequisando, error } = await db.from('catequisandos').insert([{
-            nome_completo: document.getElementById('j-nome').value,
-            data_nascimento: document.getElementById('j-nascimento').value,
-            naturalidade: document.getElementById('j-naturalidade').value,
-            telefone: document.getElementById('j-telefone').value,
-            endereco: document.getElementById('j-endereco').value,
-            nome_mae: document.getElementById('j-mae').value,
-            nome_pai: document.getElementById('j-pai').value,
-            telefone_responsavel: document.getElementById('j-telefone-responsavel').value,
-            condicao_especial: document.getElementById('j-especial').value,
-            tipo: 'jovem',
-            turma_id: turmaId,
-            catequista_id: catequistaId,
+        const payload = {
+            nome_completo: document.getElementById(`${p}-nome`).value,
+            data_nascimento: document.getElementById(`${p}-nascimento`).value,
+            naturalidade: document.getElementById(`${p}-naturalidade`)?.value || null,
+            telefone: document.getElementById(`${p}-telefone`)?.value || null,
+            endereco: document.getElementById(`${p}-endereco`)?.value || null,
+            nome_mae: document.getElementById(`${p}-mae`)?.value || null,
+            nome_pai: document.getElementById(`${p}-pai`)?.value || null,
+            condicao_especial: document.getElementById(`${p}-especial`)?.value || null,
+            tipo,
+            turma_id: document.getElementById(`${p}-turma`).value || null,
+            catequista_id: document.getElementById(`${p}-catequista`).value || null,
             foto_url: fotoUrl,
             status_cadastro: 'pendente'
-        }]).select().single();
+        };
 
+        // Campos exclusivos do jovem
+        if (tipo === 'jovem') {
+            payload.telefone_responsavel = document.getElementById('j-telefone-responsavel').value;
+        }
+
+        // Campos exclusivos do adulto
+        if (tipo === 'adulto') {
+            payload.estado_civil = document.getElementById('a-estado-civil').value;
+            payload.nome_conjuge = document.getElementById('a-nome-conjuge').value;
+            payload.casado_igreja = document.querySelector('input[name="a-casado-igreja"]:checked')?.value === 'sim';
+        }
+
+        const { data: catequisando, error } = await db.from('catequisandos').insert([payload]).select().single();
         if (error) throw error;
 
         await db.from('sacramentos').insert([{
@@ -81,105 +91,32 @@ export async function submitJovem(e) {
             tem_primeira_comunhao: temComunhao
         }]);
 
-        // Upload docs sacramento
-        const docBatismo = document.getElementById('j-doc-batismo').files[0];
-        const docComunhao = document.getElementById('j-doc-comunhao').files[0];
-        const docRG = document.getElementById('j-doc-rg').files[0];
+        // Documentos comuns a ambos os tipos
+        const docs = [
+            [document.getElementById(`${p}-doc-batismo`).files[0], 'Certidão de Batismo', 'bat_'],
+            [document.getElementById(`${p}-doc-comunhao`).files[0], '1ª Comunhão', 'com_'],
+            [document.getElementById(`${p}-doc-rg`).files[0],
+                tipo === 'jovem' ? 'Foto do RG ou Certidão de Nascimento' : 'Foto do RG ou CNH', 'rg_'],
+        ];
 
-        if (docBatismo) {
-            const path = await uploadFile('catequese_documentos', docBatismo, 'bat_');
-            await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: 'Certidão de Batismo', arquivo_path: path }]);
+        // Documento exclusivo de cada tipo
+        if (tipo === 'jovem') {
+            docs.push([document.getElementById('j-doc-rg-responsavel').files[0], 'RG do Responsável', 'rg_resp_']);
         }
-        if (docComunhao) {
-            const path = await uploadFile('catequese_documentos', docComunhao, 'com_');
-            await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: '1ª Comunhão', arquivo_path: path }]);
-        }
-        if (docRG) {
-            const path = await uploadFile('catequese_documentos', docRG, 'rg_');
-            await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: 'Foto do RG ou Certidão de Nascimento', arquivo_path: path }]);
-        }
-        const docRGResp = document.getElementById('j-doc-rg-responsavel').files[0];
-        if (docRGResp) {
-            const path = await uploadFile('catequese_documentos', docRGResp, 'rg_resp_');
-            await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: 'RG do Responsável', arquivo_path: path }]);
+        if (tipo === 'adulto') {
+            docs.push([document.getElementById('a-doc-certidao').files[0], 'Certidão de Nascimento / Casamento', 'cert_']);
         }
 
-        showToast('Cadastro realizado com sucesso!');
-        e.target.reset();
-        resetPhotoPreview('photo-preview-jovem', 'photo-placeholder-jovem');
-
-    } catch (err) {
-        console.error(err);
-        showToast(err.message, 'error');
-    } finally {
-        btn.disabled = false; btn.textContent = '✅ Finalizar Cadastro';
-    }
-}
-
-// ===== FORM: ADULTO =====
-export async function submitAdulto(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('[type="submit"]');
-    btn.disabled = true; btn.textContent = 'Salvando...';
-
-    try {
-        let fotoUrl = null;
-        const fotoFile = document.getElementById('input-foto-adulto').files[0];
-        if (fotoFile) fotoUrl = await uploadFile('catequese_fotos', fotoFile, 'adulto_');
-
-        const temBatismo = document.querySelector('input[name="a-batismo"]:checked')?.value === 'sim';
-        const temComunhao = document.querySelector('input[name="a-comunhao"]:checked')?.value === 'sim';
-
-        const turmaId = document.getElementById('a-turma').value || null;
-        const catequistaId = document.getElementById('a-catequista').value || null;
-
-        const { data: catequisando, error } = await db.from('catequisandos').insert([{
-            nome_completo: document.getElementById('a-nome').value,
-            data_nascimento: document.getElementById('a-nascimento').value,
-            estado_civil: document.getElementById('a-estado-civil').value,
-            naturalidade: document.getElementById('a-naturalidade').value,
-            telefone: document.getElementById('a-telefone').value,
-            endereco: document.getElementById('a-endereco').value,
-            nome_mae: document.getElementById('a-mae').value,
-            nome_pai: document.getElementById('a-pai').value,
-            nome_conjuge: document.getElementById('a-nome-conjuge').value,
-            casado_igreja: document.querySelector('input[name="a-casado-igreja"]:checked')?.value === 'sim',
-            condicao_especial: document.getElementById('a-especial').value,
-            tipo: 'adulto',
-            turma_id: turmaId,
-            catequista_id: catequistaId,
-            foto_url: fotoUrl,
-            status_cadastro: 'pendente'
-        }]).select().single();
-
-        if (error) throw error;
-
-        await db.from('sacramentos').insert([{
-            catequisando_id: catequisando.id,
-            tem_batismo: temBatismo,
-            tem_primeira_comunhao: temComunhao
-        }]);
-
-        const docBatismo = document.getElementById('a-doc-batismo').files[0];
-        const docComunhao = document.getElementById('a-doc-comunhao').files[0];
-        const docRG = document.getElementById('a-doc-rg').files[0];
-        const docCertidao = document.getElementById('a-doc-certidao').files[0];
-
-        for (const [file, tipo, prefix] of [
-            [docBatismo, 'Certidão de Batismo', 'bat_'],
-            [docComunhao, '1ª Comunhão', 'com_'],
-            [docRG, 'Foto do RG ou CNH', 'rg_'],
-            [docCertidao, 'Certidão de Nascimento / Casamento', 'cert_']
-        ]) {
+        for (const [file, tipoDoc, prefix] of docs) {
             if (file) {
                 const path = await uploadFile('catequese_documentos', file, prefix);
-                await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: tipo, arquivo_path: path }]);
+                await db.from('documentos').insert([{ catequisando_id: catequisando.id, tipo_documento: tipoDoc, arquivo_path: path }]);
             }
         }
 
         showToast('Cadastro realizado com sucesso!');
         e.target.reset();
-        resetPhotoPreview('photo-preview-adulto', 'photo-placeholder-adulto');
+        resetPhotoPreview(`photo-preview-${tipo}`, `photo-placeholder-${tipo}`);
 
     } catch (err) {
         console.error(err);
@@ -188,3 +125,6 @@ export async function submitAdulto(e) {
         btn.disabled = false; btn.textContent = '✅ Finalizar Cadastro';
     }
 }
+
+export async function submitJovem(e) { return submitCatequisando('jovem', e); }
+export async function submitAdulto(e) { return submitCatequisando('adulto', e); }
